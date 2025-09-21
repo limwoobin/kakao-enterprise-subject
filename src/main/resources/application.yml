@@ -1,0 +1,58 @@
+# R2DBC Only Configuration
+
+spring:
+  # Application name
+  application:
+    name: kakao-enterprise-subject
+
+  # R2DBC Configuration for reactive operations
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    pool:
+      initial-size: 5
+      max-size: 10
+      max-idle-time: 30m
+
+  # Disable SQL initialization for R2DBC (handled manually in R2dbcConfig)
+  sql:
+    init:
+      mode: never
+
+  # H2 Console Configuration (for debugging)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        trace: false
+        web-allow-others: false
+
+  # Redis Configuration (Traditional and Reactive)
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password:
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+      reactive:
+        host: 127.0.0.1
+        port: 6379
+        password:
+
+# Logging
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          r2dbc: DEBUG
+    io:
+      r2dbc:
+        h2: DEBUG
