@@ -1,4 +1,4 @@
-package com.example.kakaoenterprisesubject.config;
+package com.example.spotify_song_subject.config;
 
 import io.r2dbc.h2.H2ConnectionConfiguration;
 import io.r2dbc.h2.H2ConnectionFactory;
@@ -15,7 +15,7 @@ import org.springframework.transaction.ReactiveTransactionManager;
 
 @Configuration
 @EnableR2dbcRepositories(
-    basePackages = "com.example.kakaoenterprisesubject.repository"
+    basePackages = "com.example.spotify_song_subject.repository"
 )
 public class R2dbcConfig extends AbstractR2dbcConfiguration {
 

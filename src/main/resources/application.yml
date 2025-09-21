@@ -1,9 +1,6 @@
-# R2DBC Only Configuration
-
 spring:
-  # Application name
   application:
-    name: kakao-enterprise-subject
+    name: spotify-song-subject
 
   # R2DBC Configuration for reactive operations
   r2dbc:
