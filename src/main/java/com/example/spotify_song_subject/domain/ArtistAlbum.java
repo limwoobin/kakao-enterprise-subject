@@ -1,17 +1,18 @@
 package com.example.spotify_song_subject.domain;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@NoArgsConstructor
 @Table("artist_albums")
 public class ArtistAlbum extends BaseDomain {
 
     @Id
+    @Column("id")
     private Long id;
 
     @Column("artist_id")
@@ -19,8 +20,5 @@ public class ArtistAlbum extends BaseDomain {
 
     @Column("album_id")
     private Long albumId;
-
-    @Column("is_main_artist")
-    private Boolean isMainArtist = true;
 
 }

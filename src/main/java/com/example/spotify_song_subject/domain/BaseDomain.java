@@ -1,11 +1,13 @@
 package com.example.spotify_song_subject.domain;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.relational.core.mapping.Column;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@NoArgsConstructor
 public abstract class BaseDomain {
 
     @Column("created_at")

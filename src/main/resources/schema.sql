@@ -32,7 +32,6 @@ CREATE TABLE IF NOT EXISTS artist_albums (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '관계 고유 ID',
     artist_id BIGINT NOT NULL COMMENT '아티스트 ID',
     album_id BIGINT NOT NULL COMMENT '앨범 ID',
-    is_main_artist BOOLEAN DEFAULT TRUE COMMENT '메인 아티스트 여부',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
     deleted_at TIMESTAMP NULL COMMENT '삭제일시 (논리 삭제용)',
@@ -54,7 +53,7 @@ CREATE TABLE IF NOT EXISTS songs (
     tempo DECIMAL(10,2) COMMENT '템포 (BPM)',
     loudness_db DECIMAL(10,2) COMMENT '음량 (데시벨)',
     time_signature VARCHAR(10) COMMENT '박자 (예: 4/4)',
-    is_explicit BOOLEAN DEFAULT FALSE COMMENT '노골적 내용 포함 여부',
+    explicit_content VARCHAR(20) DEFAULT 'NOT_INCLUDED' COMMENT '노골적 내용 포함 상태',
     emotion VARCHAR(50) COMMENT '곡의 감정',
     genre VARCHAR(100) COMMENT '장르',
     popularity INT COMMENT '인기도 (0-100)',
@@ -84,7 +83,6 @@ CREATE TABLE IF NOT EXISTS songs (
 
 CREATE INDEX IF NOT EXISTS idx_song_album ON songs(album_id);
 CREATE INDEX IF NOT EXISTS idx_song_genre ON songs(genre);
-CREATE INDEX IF NOT EXISTS idx_song_popularity ON songs(popularity DESC);
 CREATE INDEX IF NOT EXISTS idx_song_like_count ON songs(like_count DESC);
 CREATE INDEX IF NOT EXISTS idx_song_deleted_at ON songs(deleted_at);
 

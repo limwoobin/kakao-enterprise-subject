@@ -1,7 +1,7 @@
 package com.example.spotify_song_subject.domain;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -9,8 +9,8 @@ import org.springframework.data.relational.core.mapping.Table;
 import java.math.BigDecimal;
 import java.time.LocalTime;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@NoArgsConstructor
 @Table("songs")
 public class Song extends BaseDomain {
 
@@ -20,15 +20,19 @@ public class Song extends BaseDomain {
     @Column("album_id")
     private Long albumId;
 
+    @Column("title")
     private String title;
 
+    @Column("lyrics")
     private String lyrics;
 
+    @Column("length")
     private LocalTime length;
 
     @Column("music_key")
     private String musicKey;
 
+    @Column("tempo")
     private BigDecimal tempo;
 
     @Column("loudness_db")
@@ -37,27 +41,37 @@ public class Song extends BaseDomain {
     @Column("time_signature")
     private String timeSignature;
 
-    @Column("is_explicit")
-    private Boolean isExplicit = false;
+    @Column("explicit_content")
+    private InclusionStatus explicitContent = InclusionStatus.NOT_INCLUDED;
 
+    @Column("emotion")
     private String emotion;
 
+    @Column("genre")
     private String genre;
 
+    @Column("popularity")
     private Integer popularity;
 
+    @Column("energy")
     private Integer energy;
 
+    @Column("danceability")
     private Integer danceability;
 
+    @Column("positiveness")
     private Integer positiveness;
 
+    @Column("speechiness")
     private Integer speechiness;
 
+    @Column("liveness")
     private Integer liveness;
 
+    @Column("acousticness")
     private Integer acousticness;
 
+    @Column("instrumentalness")
     private Integer instrumentalness;
 
     @Column("activity_suitability_party")
@@ -89,4 +103,5 @@ public class Song extends BaseDomain {
 
     @Column("like_count")
     private Long likeCount = 0L;
+
 }
