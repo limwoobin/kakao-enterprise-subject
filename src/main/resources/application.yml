@@ -43,6 +43,21 @@ spring:
         port: 6379
         password:
 
+# Data Initialization Configuration
+data:
+  directory: data
+  skip-download-if-exists: true
+  batch:
+    size: 1000
+  buffer:
+    size: 65536
+
+# Google Drive Configuration
+google:
+  drive:
+    file:
+      id: 1VDXbTqEH15B3oyHCXjgAI2lHa9aSmCcy
+
 # Logging
 logging:
   level:

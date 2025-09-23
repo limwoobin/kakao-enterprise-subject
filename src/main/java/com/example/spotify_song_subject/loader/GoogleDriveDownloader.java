@@ -76,12 +76,8 @@ public class GoogleDriveDownloader {
                 }
             }
 
-            // Check if we got HTML instead of the actual file
             String contentType = connection.getContentType();
             if (contentType != null && contentType.contains("text/html")) {
-                log.info("⚠️ Google Drive virus scan warning detected. Extracting UUID...");
-
-                // Read HTML to extract UUID
                 StringBuilder html = new StringBuilder();
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
                     String line;
@@ -96,15 +92,7 @@ public class GoogleDriveDownloader {
 
                 if (matcher.find()) {
                     String uuid = matcher.group(1);
-                    log.info("📝 Found UUID: {}", uuid);
-
-                    // Build new download URL with UUID
-                    downloadUrl = String.format(
-                        "https://drive.usercontent.google.com/download?id=%s&export=download&confirm=t&uuid=%s",
-                        fileId, uuid
-                    );
-
-                    // Retry download with UUID
+                    downloadUrl = String.format("https://drive.usercontent.google.com/download?id=%s&export=download&confirm=t&uuid=%s", fileId, uuid);
                     url = new URL(downloadUrl);
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setRequestProperty("User-Agent", "Mozilla/5.0");
@@ -141,7 +129,6 @@ public class GoogleDriveDownloader {
             }
 
             return targetFile;
-
         } catch (Exception e) {
             Files.deleteIfExists(targetFile);
             throw new IOException("Failed to download file from Google Drive: " + e.getMessage(), e);
@@ -157,7 +144,6 @@ public class GoogleDriveDownloader {
                 ZipEntry entry = entries.nextElement();
                 Path targetPath = targetDirectory.resolve(entry.getName());
 
-                // Path traversal 공격 방지
                 if (!targetPath.normalize().startsWith(targetDirectory.normalize())) {
                     throw new IOException("Invalid zip entry: " + entry.getName());
                 }
