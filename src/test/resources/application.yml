@@ -1,0 +1,20 @@
+spring:
+  main:
+    lazy-initialization: true
+
+data:
+  directory: ${java.io.tmpdir}/test-data
+  skip-download-if-exists: true
+  batch:
+    size: 100
+  buffer:
+    size: 1024
+
+google:
+  drive:
+    file:
+      id: test-file-id
+
+logging:
+  level:
+    com.example.spotify_song_subject: DEBUG

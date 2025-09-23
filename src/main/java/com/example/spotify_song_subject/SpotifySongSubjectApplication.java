@@ -1,13 +1,13 @@
-package com.example.kakaoenterprisesubject;
+package com.example.spotify_song_subject;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class KakaoEnterpriseSubjectApplication {
+public class SpotifySongSubjectApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(KakaoEnterpriseSubjectApplication.class, args);
+    SpringApplication.run(SpotifySongSubjectApplication.class, args);
   }
 
 }

@@ -1,4 +1,4 @@
-package com.example.kakaoenterprisesubject.config;
+package com.example.spotify_song_subject.config;
 
 import com.redis.testcontainers.RedisContainer;
 import jakarta.annotation.PostConstruct;
@@ -42,7 +42,6 @@ public class RedisConfiguration {
 
         redisContainer.start();
 
-        // Update Redis properties with container details
         System.setProperty("spring.data.redis.host", redisContainer.getHost());
         System.setProperty("spring.data.redis.port", String.valueOf(redisContainer.getMappedPort(6379)));
 
