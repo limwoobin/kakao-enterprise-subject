@@ -58,7 +58,7 @@ public class DataInitializationRunner {
             }
 
             log.info("Starting to process Spotify dataset...");
-//            processSpotifyData();
+            processSpotifyData();
             log.info("✅ === Data Initialization Process Completed Successfully ===");
         } catch (Exception e) {
             log.error("Failed to initialize data during startup", e);
