@@ -1,5 +1,6 @@
 package com.example.spotify_song_subject.loader;
 
+import com.example.spotify_song_subject.application.SpotifyDataPersistenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,12 +13,14 @@ class DataInitializationRunnerTest {
 
     private GoogleDriveDownloader googleDriveDownloader;
     private SpotifyDataStreamReader spotifyDataStreamReader;
+    private SpotifyDataPersistenceService spotifyDataPersistenceService;
 
-  @BeforeEach
+    @BeforeEach
     void setUp() {
         googleDriveDownloader = mock(GoogleDriveDownloader.class);
         spotifyDataStreamReader = mock(SpotifyDataStreamReader.class);
-  }
+        spotifyDataPersistenceService = mock(SpotifyDataPersistenceService.class);
+    }
 
     @Test
     @DisplayName("DataInitializationRunner 인스턴스가 정상적으로 생성된다")
@@ -25,7 +28,8 @@ class DataInitializationRunnerTest {
         // given
         DataInitializationRunner runner = new DataInitializationRunner(
             googleDriveDownloader,
-            spotifyDataStreamReader
+            spotifyDataStreamReader,
+            spotifyDataPersistenceService
         );
 
         // when & then
@@ -38,7 +42,8 @@ class DataInitializationRunnerTest {
         // given
         DataInitializationRunner runner = new DataInitializationRunner(
             googleDriveDownloader,
-            spotifyDataStreamReader
+            spotifyDataStreamReader,
+            spotifyDataPersistenceService
         );
 
         // when & then
@@ -51,7 +56,8 @@ class DataInitializationRunnerTest {
         // given & when
         DataInitializationRunner runner = new DataInitializationRunner(
             googleDriveDownloader,
-            spotifyDataStreamReader
+            spotifyDataStreamReader,
+            spotifyDataPersistenceService
         );
 
         // then

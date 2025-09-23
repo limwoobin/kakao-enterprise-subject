@@ -1,10 +1,10 @@
 package com.example.spotify_song_subject.loader;
 
+import com.example.spotify_song_subject.application.SpotifyDataPersistenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.boot.ApplicationArguments;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
 
@@ -21,9 +21,10 @@ import static org.mockito.Mockito.*;
 class DataInitializationRunnerBehaviorTest {
 
     private DataInitializationRunner dataInitializationRunner;
+
     private GoogleDriveDownloader googleDriveDownloader;
     private SpotifyDataStreamReader spotifyDataStreamReader;
-    private ApplicationArguments applicationArguments;
+    private SpotifyDataPersistenceService spotifyDataPersistenceService;
 
     @TempDir
     Path tempDir;
@@ -32,17 +33,18 @@ class DataInitializationRunnerBehaviorTest {
     void setUp() {
         googleDriveDownloader = mock(GoogleDriveDownloader.class);
         spotifyDataStreamReader = mock(SpotifyDataStreamReader.class);
-        applicationArguments = mock(ApplicationArguments.class);
+        spotifyDataPersistenceService = mock(SpotifyDataPersistenceService.class);
 
         dataInitializationRunner = new DataInitializationRunner(
             googleDriveDownloader,
-            spotifyDataStreamReader
+            spotifyDataStreamReader,
+            spotifyDataPersistenceService
         );
     }
 
     @Test
-    @DisplayName("애플리케이션 시작 시 run 메서드가 실행되어야 한다")
-    void 애플리케이션시작시_run실행() {
+    @DisplayName("애플리케이션 준비 완료 시 onApplicationReady 메서드가 실행되어야 한다")
+    void 애플리케이션준비완료시_onApplicationReady실행() {
         // given
         ReflectionTestUtils.setField(dataInitializationRunner, "dataDirectory", tempDir.toString());
         ReflectionTestUtils.setField(dataInitializationRunner, "skipDownloadIfExists", false);
@@ -59,7 +61,7 @@ class DataInitializationRunnerBehaviorTest {
             .thenReturn(Flux.empty());
 
         // when
-        assertThatCode(() -> dataInitializationRunner.run(applicationArguments))
+        assertThatCode(() -> dataInitializationRunner.onApplicationReady())
             .doesNotThrowAnyException();
 
         // then - 데이터 초기화 동작이 실행되었는지 검증
@@ -82,7 +84,7 @@ class DataInitializationRunnerBehaviorTest {
             .thenReturn(Flux.empty());
 
         // when
-        dataInitializationRunner.run(applicationArguments);
+        dataInitializationRunner.onApplicationReady();
 
         // then - 다운로드는 건너뛰고 스트리밍만 실행
         verify(googleDriveDownloader, never()).downloadAndExtractFile();
@@ -108,7 +110,7 @@ class DataInitializationRunnerBehaviorTest {
             .thenReturn(Flux.empty());
 
         // when
-        dataInitializationRunner.run(applicationArguments);
+        dataInitializationRunner.onApplicationReady();
 
         // then - 다운로드와 스트리밍 모두 실행
         verify(googleDriveDownloader, times(1)).downloadAndExtractFile();
@@ -130,7 +132,7 @@ class DataInitializationRunnerBehaviorTest {
             .thenReturn(Flux.empty());
 
         // when
-        dataInitializationRunner.run(applicationArguments);
+        dataInitializationRunner.onApplicationReady();
 
         // then - skip이 false이므로 다운로드 실행
         verify(googleDriveDownloader, times(1)).downloadAndExtractFile();
@@ -155,8 +157,11 @@ class DataInitializationRunnerBehaviorTest {
         when(spotifyDataStreamReader.streamSpotifyDataInBatches())
             .thenReturn(Flux.just(mockBatch));
 
+        when(spotifyDataPersistenceService.processSongBatch(any()))
+            .thenReturn(reactor.core.publisher.Mono.empty());
+
         // when
-        dataInitializationRunner.run(applicationArguments);
+        dataInitializationRunner.onApplicationReady();
 
         // then - 스트리밍 처리가 실행되었는지만 검증
         verify(spotifyDataStreamReader, times(1)).streamSpotifyDataInBatches();
@@ -170,7 +175,7 @@ class DataInitializationRunnerBehaviorTest {
         ReflectionTestUtils.setField(dataInitializationRunner, "dataDirectory", nonExistentDir.toString());
 
         // when & then
-        assertThatThrownBy(() -> dataInitializationRunner.run(applicationArguments))
+        assertThatThrownBy(() -> dataInitializationRunner.onApplicationReady())
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("Data initialization failed")
             .hasCauseInstanceOf(IllegalStateException.class);
@@ -192,7 +197,7 @@ class DataInitializationRunnerBehaviorTest {
             .when(googleDriveDownloader).downloadAndExtractFile();
 
         // when & then
-        assertThatThrownBy(() -> dataInitializationRunner.run(applicationArguments))
+        assertThatThrownBy(() -> dataInitializationRunner.onApplicationReady())
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("Data initialization failed");
 
@@ -215,7 +220,7 @@ class DataInitializationRunnerBehaviorTest {
             .thenReturn(Flux.error(new RuntimeException("Streaming failed")));
 
         // when & then
-        assertThatThrownBy(() -> dataInitializationRunner.run(applicationArguments))
+        assertThatThrownBy(() -> dataInitializationRunner.onApplicationReady())
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("Data initialization failed");
 
