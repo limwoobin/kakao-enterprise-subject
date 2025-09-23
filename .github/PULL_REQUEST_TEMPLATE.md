@@ -11,14 +11,6 @@
 
 ### 기타
 
-- [ ] hotfix
-- [ ] epic
-- [ ] feature
-
-<hr>
-
-### 기타
-
 
 <br>
 <hr>
