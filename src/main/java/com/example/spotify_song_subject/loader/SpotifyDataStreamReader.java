@@ -58,6 +58,7 @@ public class SpotifyDataStreamReader {
 
     /**
      * 실제 JSON 파싱을 수행하는 Flux 생성
+     * - NDJSON (Newline Delimited JSON) 형식 처리
      * - 단일 스레드 스케줄러로 순차 처리
      * - 스레드 재사용으로 효율적인 자원 관리
      */
@@ -66,16 +67,14 @@ public class SpotifyDataStreamReader {
             JsonFactory jsonFactory = new JsonFactory();
 
             try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(jsonFilePath.toFile()), bufferSize);
-                 JsonParser jsonParser = jsonFactory.createParser(bis)) {
-                if (jsonParser.nextToken() != JsonToken.START_ARRAY) {
-                    sink.error(new IllegalStateException("Expected JSON array"));
-                    return;
-                }
-
-                while (jsonParser.nextToken() == JsonToken.START_OBJECT) {
-                    Map<String, Object> songData = parseSongObject(jsonParser);
-                    if (!songData.isEmpty()) {
-                        sink.next(songData);
+                JsonParser jsonParser = jsonFactory.createParser(bis)) {
+                JsonToken token;
+                while ((token = jsonParser.nextToken()) != null) {
+                    if (token == JsonToken.START_OBJECT) {
+                        Map<String, Object> songData = parseSongObject(jsonParser);
+                        if (!songData.isEmpty()) {
+                            sink.next(songData);
+                        }
                     }
                 }
 
