@@ -2,7 +2,6 @@ package com.example.spotify_song_subject.config;
 
 import org.h2.tools.Server;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -17,7 +16,6 @@ import java.sql.SQLException;
  */
 @Slf4j
 @Component
-@Profile("!prod") // 프로덕션 환경에서는 비활성화
 public class H2ConsoleConfig {
 
     private Server webServer;
