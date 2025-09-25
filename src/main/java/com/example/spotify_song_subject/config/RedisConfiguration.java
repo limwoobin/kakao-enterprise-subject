@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -35,7 +34,6 @@ public class RedisConfiguration {
     }
 
     @PostConstruct
-    @Profile({"default", "dev", "test"})
     public void startEmbeddedRedis() {
         redisContainer = new RedisContainer(DockerImageName.parse(REDIS_IMAGE))
                 .withExposedPorts(6379);
@@ -75,11 +73,9 @@ public class RedisConfiguration {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // Use GenericJackson2JsonRedisSerializer for object serialization
         GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
 
-        // Key-Value serializers
         template.setKeySerializer(stringSerializer);
         template.setHashKeySerializer(stringSerializer);
         template.setValueSerializer(jsonSerializer);
