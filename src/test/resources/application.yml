@@ -1,6 +1,10 @@
 spring:
   main:
     lazy-initialization: true
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    username: sa
+    password:
 
 data:
   directory: ${java.io.tmpdir}/test-data
@@ -18,3 +22,5 @@ google:
 logging:
   level:
     com.example.spotify_song_subject: DEBUG
+    org.springframework.r2dbc: DEBUG
+    io.r2dbc.h2: DEBUG

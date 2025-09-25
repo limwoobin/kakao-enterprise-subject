@@ -37,8 +37,8 @@ class DataInitializationRunnerTest {
     }
 
     @Test
-    @DisplayName("ApplicationRunner 인터페이스를 구현한다")
-    void ApplicationRunner구현_확인() {
+    @DisplayName("Component로 등록되어 있다")
+    void Component등록_확인() {
         // given
         DataInitializationRunner runner = new DataInitializationRunner(
             googleDriveDownloader,
@@ -47,7 +47,8 @@ class DataInitializationRunnerTest {
         );
 
         // when & then
-        assertThat(runner).isInstanceOf(org.springframework.boot.ApplicationRunner.class);
+        assertThat(runner).isNotNull();
+        assertThat(runner.getClass().isAnnotationPresent(org.springframework.stereotype.Component.class)).isTrue();
     }
 
     @Test

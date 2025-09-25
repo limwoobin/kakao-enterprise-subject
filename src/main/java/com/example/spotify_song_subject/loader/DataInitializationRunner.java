@@ -57,7 +57,6 @@ public class DataInitializationRunner {
                 log.info("Data file already exists. Skipping download.");
             }
 
-            log.info("Starting to process Spotify dataset...");
             processSpotifyData();
             log.info("✅ === Data Initialization Process Completed Successfully ===");
         } catch (Exception e) {
