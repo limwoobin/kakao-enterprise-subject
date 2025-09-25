@@ -1,6 +1,7 @@
 package com.example.spotify_song_subject.application;
 
 import com.example.spotify_song_subject.domain.*;
+import com.example.spotify_song_subject.dto.SimilarSongDto;
 import com.example.spotify_song_subject.dto.SpotifySongDto;
 import com.example.spotify_song_subject.mapper.SpotifyDataMapper;
 import com.example.spotify_song_subject.mapper.SpotifyDomainMapper;
@@ -13,11 +14,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 /**
  * Spotify 데이터를 도메인 엔티티로 변환하고 저장하는 서비스
@@ -35,17 +32,13 @@ public class SpotifyDataPersistenceService {
     private final SimilarSongRepository similarSongRepository;
     private final TransactionalOperator transactionalOperator;
 
-    private final Map<String, Artist> artistCache = new ConcurrentHashMap<>();
-    private final Map<String, Album> albumCache = new ConcurrentHashMap<>();
-    private final Map<String, Song> songCache = new ConcurrentHashMap<>();
-
     /**
      * Map 데이터 리스트를 처리하고 저장
      * Map → DTO → Domain 변환 후 저장
      */
     public Mono<Void> processSongBatch(List<Map<String, Object>> songMaps) {
         return Flux.fromIterable(songMaps)
-            .map(SpotifyDataMapper::mapToSpotifySongDto)
+            .mapNotNull(SpotifyDataMapper::mapToSpotifySongDto)
             .flatMap(this::processSingleSong)
             .then()
             .as(transactionalOperator::transactional)
@@ -90,17 +83,12 @@ public class SpotifyDataPersistenceService {
         for (Artist artist : artists) {
             String artistName = artist.getName();
 
-            if (artistCache.containsKey(artistName)) {
-                artistMonos.add(Mono.just(artistCache.get(artistName)));
-            } else {
-                Mono<Artist> artistMono = artistRepository.findByNameAndDeletedAtIsNull(artistName)
-                    .switchIfEmpty(
-                        Mono.defer(() -> artistRepository.save(artist))
-                    )
-                    .doOnNext(saved -> artistCache.put(artistName, saved));
+            Mono<Artist> artistMono = artistRepository.findByName(artistName)
+                .switchIfEmpty(
+                    Mono.defer(() -> artistRepository.save(artist))
+                );
 
-                artistMonos.add(artistMono);
-            }
+            artistMonos.add(artistMono);
         }
 
         return Flux.merge(artistMonos).collectList();
@@ -108,18 +96,14 @@ public class SpotifyDataPersistenceService {
 
     /**
      * 앨범 처리
+     * title + release_date로 중복 체크
+     * (하나의 앨범은 여러 아티스트가 공유할 수 있으므로 artist_id를 포함하지 않음)
      */
     private Mono<Album> processAlbum(Album album) {
         String albumTitle = album.getTitle();
-        String cacheKey = albumTitle + "_" + album.getReleaseDate();
 
-        if (albumCache.containsKey(cacheKey)) {
-            return Mono.just(albumCache.get(cacheKey));
-        }
-
-        return albumRepository.findByTitleAndReleaseDateAndDeletedAtIsNull(albumTitle, album.getReleaseDate())
-            .switchIfEmpty(Mono.defer(() -> albumRepository.save(album)))
-            .doOnNext(saved -> albumCache.put(cacheKey, saved));
+        return albumRepository.findByTitleAndReleaseDate(albumTitle, album.getReleaseDate())
+            .switchIfEmpty(Mono.defer(() -> albumRepository.save(album)));
     }
 
     /**
@@ -129,27 +113,21 @@ public class SpotifyDataPersistenceService {
         Song songToSave = SpotifyDomainMapper.convertToSong(dto, albumId);
         String title = songToSave.getTitle();
 
-        String cacheKey = title + "_" + albumId;
-
-        // 캐시에서 먼저 확인
-        if (songCache.containsKey(cacheKey)) {
-            return Mono.just(songCache.get(cacheKey));
-        }
-
-        return songRepository.findByTitleAndAlbumIdAndDeletedAtIsNull(title, albumId)
+        return songRepository.findByTitleAndAlbumId(title, albumId)
             .switchIfEmpty(
                 Mono.defer(() -> songRepository.save(songToSave))
-            )
-            .doOnNext(song -> songCache.put(cacheKey, song));
+            );
     }
 
     /**
      * 아티스트-곡 관계 저장
+     * artist_id와 song_id의 조합으로 중복 체크
+     * (song 자체에 album_id가 포함되어 있으므로 song_id로 충분함)
      */
     private Mono<Void> saveArtistSongRelations(List<Artist> artists, Song song) {
         return Flux.fromIterable(artists)
             .flatMap(artist ->
-                artistSongRepository.findByArtistIdAndSongIdAndDeletedAtIsNull(artist.getId(), song.getId())
+                artistSongRepository.findByArtistIdAndSongId(artist.getId(), song.getId())
                     .switchIfEmpty(
                         Mono.defer(() -> {
                             ArtistSong artistSong = SpotifyDomainMapper.createArtistSong(artist.getId(), song.getId());
@@ -166,7 +144,7 @@ public class SpotifyDataPersistenceService {
     private Mono<Void> saveArtistAlbumRelations(List<Artist> artists, Album album) {
         return Flux.fromIterable(artists)
             .flatMap(artist ->
-                artistAlbumRepository.findByArtistIdAndAlbumIdAndDeletedAtIsNull(artist.getId(), album.getId())
+                artistAlbumRepository.findByArtistIdAndAlbumId(artist.getId(), album.getId())
                     .switchIfEmpty(
                         Mono.defer(() -> {
                             ArtistAlbum artistAlbum = SpotifyDomainMapper.createArtistAlbum(artist.getId(), album.getId());
@@ -178,7 +156,7 @@ public class SpotifyDataPersistenceService {
     }
 
     /**
-     * Similar Songs 처리
+     * Similar Songs 처리 - artist name과 song title을 직접 저장
      */
     private Mono<Void> processSimilarSongs(SpotifySongDto dto, Song song) {
         if (dto.getSimilarSongs() == null || dto.getSimilarSongs().isEmpty()) {
@@ -186,59 +164,30 @@ public class SpotifyDataPersistenceService {
         }
 
         return Flux.fromIterable(dto.getSimilarSongs())
-            .flatMap(similarDto -> findSimilarSong(similarDto)
-            .flatMap(similarSong -> saveSimilarSongRelation(song.getId(), similarSong.getId(), similarDto.getSimilarityScore())))
+            .flatMap(similarDto -> saveSimilarSongRelation(song.getId(), similarDto))
             .then();
     }
 
     /**
-     * Similar Song 찾기
+     * Similar Song 관계 저장 - 중복 체크 후 저장
      */
-    private Mono<Song> findSimilarSong(com.example.spotify_song_subject.dto.SimilarSongDto similarDto) {
-        // Similar Song을 title로만 찾기 (간단한 매칭)
-        return songRepository.findByTitleAndDeletedAtIsNull(similarDto.getSongTitle())
-            .collectList()
-            .flatMap(songs -> {
-                if (songs.isEmpty()) {
-                    // Similar Song이 없으면 스킵
-                    return Mono.empty();
-                }
-                // 첫 번째 매칭된 곡 반환
-                return Mono.just(songs.get(0));
-            });
-    }
+    private Mono<Void> saveSimilarSongRelation(Long songId, SimilarSongDto similarDto) {
+        String artistName = similarDto.getArtistName();
+        String songTitle = similarDto.getSongTitle();
+        BigDecimal score = similarDto.getSimilarityScore();
 
-    /**
-     * Similar Song 관계 저장
-     */
-    private Mono<Void> saveSimilarSongRelation(Long songId, Long similarSongId, BigDecimal score) {
-        return similarSongRepository.findBySongIdAndSimilarSongIdAndDeletedAtIsNull(songId, similarSongId)
+        return similarSongRepository.findBySongIdAndSimilarInfo(songId, artistName, songTitle)
             .switchIfEmpty(
                 Mono.defer(() -> {
-                    SimilarSong relation = SimilarSong.builder()
-                        .songId(songId)
-                        .similarSongId(similarSongId)
-                        .similarityScore(normalizeScore(score))
-                        .build();
+                    SimilarSong relation = SpotifyDomainMapper.createSimilarSong(
+                        songId, artistName, songTitle, score
+                    );
                     return similarSongRepository.save(relation);
                 })
             )
-            .then();
-    }
-
-    /**
-     * 유사도 점수 정규화 (0~1 범위)
-     */
-    private BigDecimal normalizeScore(BigDecimal score) {
-        if (score == null) {
-            return BigDecimal.ZERO;
-        }
-
-        if (score.compareTo(BigDecimal.ONE) <= 0) {
-            return score;
-        }
-
-        return BigDecimal.ONE;
+            .then()
+            .doOnSuccess(v -> log.debug("Saved similar song relation: {} - {} (score: {})",
+                artistName, songTitle, score));
     }
 
 }
