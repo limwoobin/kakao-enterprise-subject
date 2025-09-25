@@ -1,61 +1,55 @@
 package com.example.spotify_song_subject.config;
 
-import io.r2dbc.h2.H2ConnectionConfiguration;
-import io.r2dbc.h2.H2ConnectionFactory;
-import io.r2dbc.spi.ConnectionFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
+import org.springframework.data.domain.ReactiveAuditorAware;
+import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
-import org.springframework.r2dbc.connection.R2dbcTransactionManager;
 import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer;
 import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator;
-import org.springframework.transaction.ReactiveTransactionManager;
+import reactor.core.publisher.Mono;
+import io.r2dbc.spi.ConnectionFactory;
 
+@Slf4j
 @Configuration
-@EnableR2dbcRepositories(
-    basePackages = "com.example.spotify_song_subject.repository"
-)
-public class R2dbcConfig extends AbstractR2dbcConfiguration {
+@EnableR2dbcAuditing
+@EnableR2dbcRepositories(basePackages = "com.example.spotify_song_subject.repository")
+public class R2dbcConfig {
 
-    @Override
-    @Bean
-    public ConnectionFactory connectionFactory() {
-        // H2 in-memory database configuration
-        return new H2ConnectionFactory(
-            H2ConnectionConfiguration.builder()
-                .inMemory("testdb")
-                .username("sa")
-                .build()
-        );
-    }
-
-    @Bean
-    public ReactiveTransactionManager transactionManager(ConnectionFactory connectionFactory) {
-        return new R2dbcTransactionManager(connectionFactory);
-    }
+    /**
+     * Spring Boot가 자동으로 ConnectionFactory를 생성하도록 위임
+     * application.yml의 spring.r2dbc 설정을 사용
+     */
 
     @Bean
     public ConnectionFactoryInitializer initializer(ConnectionFactory connectionFactory) {
         ConnectionFactoryInitializer initializer = new ConnectionFactoryInitializer();
         initializer.setConnectionFactory(connectionFactory);
 
-        // R2DBC는 JPA와 달리 Entity 기반 DDL 자동 생성을 지원하지 않음
-        // 따라서 schema.sql을 통한 수동 스키마 생성이 필요
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-
-        // schema.sql 파일이 있다면 실행 (옵션)
-        try {
-            ClassPathResource schemaResource = new ClassPathResource("schema.sql");
-            if (schemaResource.exists()) {
-                populator.addScript(schemaResource);
-            }
-        } catch (Exception e) {
-            // schema.sql이 없어도 정상 동작 (테이블이 필요한 경우 수동 생성 필요)
-        }
+        populator.addScript(new ClassPathResource("schema.sql"));
+        populator.setSeparator(";");
+        populator.setContinueOnError(false);
 
         initializer.setDatabasePopulator(populator);
         return initializer;
+    }
+
+    /**
+     * Reactive Auditor 설정
+     * @CreatedBy, @LastModifiedBy 어노테이션을 위한 사용자 정보 제공
+     * 실제 운영 환경에서는 SecurityContext에서 사용자 정보를 가져와야 함
+     */
+    @Bean
+    public ReactiveAuditorAware<String> auditorAware() {
+        return () -> Mono.just("system");  // 기본값으로 "system" 사용
+        // 실제 구현 예시:
+        // return () -> ReactiveSecurityContextHolder.getContext()
+        //     .map(SecurityContext::getAuthentication)
+        //     .filter(Authentication::isAuthenticated)
+        //     .map(Authentication::getName)
+        //     .switchIfEmpty(Mono.just("system"));
     }
 }

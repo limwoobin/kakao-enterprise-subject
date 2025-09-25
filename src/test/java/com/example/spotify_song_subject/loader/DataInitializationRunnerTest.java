@@ -1,5 +1,6 @@
 package com.example.spotify_song_subject.loader;
 
+import com.example.spotify_song_subject.application.SpotifyDataPersistenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,12 +13,14 @@ class DataInitializationRunnerTest {
 
     private GoogleDriveDownloader googleDriveDownloader;
     private SpotifyDataStreamReader spotifyDataStreamReader;
+    private SpotifyDataPersistenceService spotifyDataPersistenceService;
 
-  @BeforeEach
+    @BeforeEach
     void setUp() {
         googleDriveDownloader = mock(GoogleDriveDownloader.class);
         spotifyDataStreamReader = mock(SpotifyDataStreamReader.class);
-  }
+        spotifyDataPersistenceService = mock(SpotifyDataPersistenceService.class);
+    }
 
     @Test
     @DisplayName("DataInitializationRunner 인스턴스가 정상적으로 생성된다")
@@ -25,7 +28,8 @@ class DataInitializationRunnerTest {
         // given
         DataInitializationRunner runner = new DataInitializationRunner(
             googleDriveDownloader,
-            spotifyDataStreamReader
+            spotifyDataStreamReader,
+            spotifyDataPersistenceService
         );
 
         // when & then
@@ -33,16 +37,18 @@ class DataInitializationRunnerTest {
     }
 
     @Test
-    @DisplayName("ApplicationRunner 인터페이스를 구현한다")
-    void ApplicationRunner구현_확인() {
+    @DisplayName("Component로 등록되어 있다")
+    void Component등록_확인() {
         // given
         DataInitializationRunner runner = new DataInitializationRunner(
             googleDriveDownloader,
-            spotifyDataStreamReader
+            spotifyDataStreamReader,
+            spotifyDataPersistenceService
         );
 
         // when & then
-        assertThat(runner).isInstanceOf(org.springframework.boot.ApplicationRunner.class);
+        assertThat(runner).isNotNull();
+        assertThat(runner.getClass().isAnnotationPresent(org.springframework.stereotype.Component.class)).isTrue();
     }
 
     @Test
@@ -51,7 +57,8 @@ class DataInitializationRunnerTest {
         // given & when
         DataInitializationRunner runner = new DataInitializationRunner(
             googleDriveDownloader,
-            spotifyDataStreamReader
+            spotifyDataStreamReader,
+            spotifyDataPersistenceService
         );
 
         // then

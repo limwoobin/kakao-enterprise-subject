@@ -4,7 +4,7 @@ spring:
 
   # R2DBC Configuration for reactive operations
   r2dbc:
-    url: r2dbc:h2:mem:///testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+    url: r2dbc:h2:mem:///testdb;MODE=MySQL
     username: sa
     password:
     pool:
@@ -12,10 +12,10 @@ spring:
       max-size: 10
       max-idle-time: 30m
 
-  # Disable SQL initialization for R2DBC (handled manually in R2dbcConfig)
+  # Disable SQL initialization (handled by R2dbcConfig)
   sql:
     init:
-      mode: never
+      mode: always
 
   # H2 Console Configuration (for debugging)
   h2:
