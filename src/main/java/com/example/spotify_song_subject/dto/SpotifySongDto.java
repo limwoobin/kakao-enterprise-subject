@@ -61,28 +61,28 @@ public class SpotifySongDto {
     private String explicit;
 
     @JsonProperty("Popularity")
-    private String popularity;
+    private Integer popularity;
 
     @JsonProperty("Energy")
-    private String energy;
+    private Integer energy;
 
     @JsonProperty("Danceability")
-    private String danceability;
+    private Integer danceability;
 
     @JsonProperty("Positiveness")
-    private String positiveness;
+    private Integer positiveness;
 
     @JsonProperty("Speechiness")
-    private String speechiness;
+    private Integer speechiness;
 
     @JsonProperty("Liveness")
-    private String liveness;
+    private Integer liveness;
 
     @JsonProperty("Acousticness")
-    private String acousticness;
+    private Integer acousticness;
 
     @JsonProperty("Instrumentalness")
-    private String instrumentalness;
+    private Integer instrumentalness;
 
     @JsonProperty("Good for Party")
     private Integer goodForParty;
@@ -128,6 +128,7 @@ public class SpotifySongDto {
         if (additionalProperties == null) {
             additionalProperties = new HashMap<>();
         }
+
         additionalProperties.put(key, value);
     }
 
