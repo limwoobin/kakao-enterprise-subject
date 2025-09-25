@@ -42,14 +42,14 @@ public class SpotifyDataMapper {
             builder.explicit(getString(songData, "Explicit"));
 
             // 음악 특성 필드
-            builder.popularity(getString(songData, "Popularity"));
-            builder.energy(getString(songData, "Energy"));
-            builder.danceability(getString(songData, "Danceability"));
-            builder.positiveness(getString(songData, "Positiveness"));
-            builder.speechiness(getString(songData, "Speechiness"));
-            builder.liveness(getString(songData, "Liveness"));
-            builder.acousticness(getString(songData, "Acousticness"));
-            builder.instrumentalness(getString(songData, "Instrumentalness"));
+            builder.popularity(getInteger(songData, "Popularity"));
+            builder.energy(getInteger(songData, "Energy"));
+            builder.danceability(getInteger(songData, "Danceability"));
+            builder.positiveness(getInteger(songData, "Positiveness"));
+            builder.speechiness(getInteger(songData, "Speechiness"));
+            builder.liveness(getInteger(songData, "Liveness"));
+            builder.acousticness(getInteger(songData, "Acousticness"));
+            builder.instrumentalness(getInteger(songData, "Instrumentalness"));
 
             // 활동 적합도 필드
             builder.goodForParty(getInteger(songData, "Good for Party"));
@@ -65,12 +65,10 @@ public class SpotifyDataMapper {
             // Similar Songs 처리
             List<SimilarSongDto> similarSongs = mapSimilarSongs(songData.get("Similar Songs"));
             builder.similarSongs(similarSongs);
-
             return builder.build();
-
         } catch (Exception e) {
             log.error("Failed to map song data to DTO", e);
-            throw new RuntimeException("Failed to map song data", e);
+            return null;
         }
     }
 
@@ -133,7 +131,7 @@ public class SpotifyDataMapper {
             try {
                 return new BigDecimal((String) value);
             } catch (NumberFormatException e) {
-                log.warn("Failed to parse BigDecimal for key: {}, value: {}", key, value);
+                log.error("Failed to parse BigDecimal for key: {}, value: {}", key, value);
                 return null;
             }
         }

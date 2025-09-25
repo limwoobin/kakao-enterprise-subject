@@ -122,7 +122,8 @@ CREATE INDEX IF NOT EXISTS idx_like_deleted_at ON song_likes(deleted_at);
 CREATE TABLE IF NOT EXISTS similar_songs (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '유사 관계 고유 ID',
     song_id BIGINT NOT NULL COMMENT '기준 곡 ID',
-    similar_song_id BIGINT NOT NULL COMMENT '유사 곡 ID',
+    similar_artist_name VARCHAR(1000) NOT NULL COMMENT '유사 곡의 아티스트명',
+    similar_song_title VARCHAR(500) NOT NULL COMMENT '유사 곡의 제목',
     similarity_score DECIMAL(20,18) NOT NULL COMMENT '유사도 점수 (0-1)',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
@@ -132,4 +133,5 @@ CREATE TABLE IF NOT EXISTS similar_songs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_similar_score ON similar_songs(song_id, similarity_score DESC);
+CREATE INDEX IF NOT EXISTS idx_similar_artist_song ON similar_songs(similar_artist_name, similar_song_title);
 CREATE INDEX IF NOT EXISTS idx_similar_deleted_at ON similar_songs(deleted_at);

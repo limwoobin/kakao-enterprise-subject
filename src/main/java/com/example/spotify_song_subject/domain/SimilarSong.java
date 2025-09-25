@@ -1,10 +1,9 @@
 package com.example.spotify_song_subject.domain;
 
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -12,10 +11,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import java.math.BigDecimal;
 
 @Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table("similar_songs")
 public class SimilarSong extends BaseDomain {
 
@@ -26,9 +22,20 @@ public class SimilarSong extends BaseDomain {
     @Column("song_id")
     private Long songId;
 
-    @Column("similar_song_id")
-    private Long similarSongId;
+    @Column("similar_artist_name")
+    private String similarArtistName;
+
+    @Column("similar_song_title")
+    private String similarSongTitle;
 
     @Column("similarity_score")
     private BigDecimal similarityScore;
+
+    @Builder
+    public SimilarSong(Long songId, String similarArtistName, String similarSongTitle, BigDecimal similarityScore) {
+        this.songId = songId;
+        this.similarArtistName = similarArtistName;
+        this.similarSongTitle = similarSongTitle;
+        this.similarityScore = similarityScore;
+    }
 }
