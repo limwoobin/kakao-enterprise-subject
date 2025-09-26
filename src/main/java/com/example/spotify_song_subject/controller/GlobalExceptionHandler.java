@@ -42,33 +42,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Bean Validation 예외 처리 (WebFlux 환경)
-     * @Valid 어노테이션으로 검증 실패 시 발생
-     * 400 Bad Request 반환
-     */
-    @ExceptionHandler(WebExchangeBindException.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleValidationException(WebExchangeBindException ex,
-                                                                         ServerWebExchange exchange) {
-
-        String errors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(Collectors.joining(", "));
-
-        log.warn("Validation failed: {}", errors);
-
-        ErrorResponse errorResponse = ErrorResponse.of(
-                errors,
-                "VALIDATION_ERROR",
-                exchange.getRequest().getPath().value()
-        );
-
-        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse));
-    }
-
-    /**
      * IllegalArgumentException 처리 (잘못된 요청 파라미터)
      * 400 Bad Request 반환
      */
