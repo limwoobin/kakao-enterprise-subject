@@ -1,7 +1,6 @@
 package com.example.spotify_song_subject.config;
 
 import com.redis.testcontainers.RedisContainer;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -31,19 +30,28 @@ public class RedisConfiguration {
 
     public RedisConfiguration(RedisProperties redisProperties) {
         this.redisProperties = redisProperties;
+        startEmbeddedRedis();
     }
 
-    @PostConstruct
-    public void startEmbeddedRedis() {
+    private void startEmbeddedRedis() {
+        try {
+            java.net.Socket socket = new java.net.Socket("localhost", 6379);
+            socket.close();
+            return;
+        } catch (Exception ignored) {
+        }
+
         redisContainer = new RedisContainer(DockerImageName.parse(REDIS_IMAGE))
-                .withExposedPorts(6379);
+            .withExposedPorts(6379)
+            .withCreateContainerCmdModifier(cmd ->
+                cmd.withHostConfig(
+                    cmd.getHostConfig().withPortBindings(
+                        com.github.dockerjava.api.model.PortBinding.parse("6379:6379")
+                    )
+                )
+            );
 
         redisContainer.start();
-
-        System.setProperty("spring.data.redis.host", redisContainer.getHost());
-        System.setProperty("spring.data.redis.port", String.valueOf(redisContainer.getMappedPort(6379)));
-
-        System.out.println("Embedded Redis started on " + redisContainer.getHost() + ":" + redisContainer.getMappedPort(6379));
     }
 
     @PreDestroy
@@ -64,7 +72,6 @@ public class RedisConfiguration {
         }
         config.setDatabase(0);
 
-        // Simple configuration without connection pooling
         return new LettuceConnectionFactory(config);
     }
 
@@ -87,39 +94,39 @@ public class RedisConfiguration {
 
     @Bean
     public ReactiveRedisTemplate<String, Object> reactiveRedisTemplate(
-            ReactiveRedisConnectionFactory connectionFactory) {
+        ReactiveRedisConnectionFactory connectionFactory) {
 
         GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
 
         RedisSerializationContext<String, Object> serializationContext = RedisSerializationContext
-                .<String, Object>newSerializationContext()
-                .key(stringSerializer)
-                .value(jsonSerializer)
-                .hashKey(stringSerializer)
-                .hashValue(jsonSerializer)
-                .build();
+            .<String, Object>newSerializationContext()
+            .key(stringSerializer)
+            .value(jsonSerializer)
+            .hashKey(stringSerializer)
+            .hashValue(jsonSerializer)
+            .build();
 
         return new ReactiveRedisTemplate<>(connectionFactory, serializationContext);
     }
 
     @Bean
     public ReactiveStringRedisTemplate reactiveStringRedisTemplate(
-            ReactiveRedisConnectionFactory connectionFactory) {
+        ReactiveRedisConnectionFactory connectionFactory) {
         return new ReactiveStringRedisTemplate(connectionFactory);
     }
 
     @Bean
     public ReactiveRedisTemplate<String, Long> reactiveLongRedisTemplate(
-            ReactiveRedisConnectionFactory connectionFactory) {
+        ReactiveRedisConnectionFactory connectionFactory) {
 
         RedisSerializationContext<String, Long> serializationContext = RedisSerializationContext
-                .<String, Long>newSerializationContext()
-                .key(StringRedisSerializer.UTF_8)
-                .value(new GenericToStringSerializer<>(Long.class))
-                .hashKey(StringRedisSerializer.UTF_8)
-                .hashValue(new GenericToStringSerializer<>(Long.class))
-                .build();
+            .<String, Long>newSerializationContext()
+            .key(StringRedisSerializer.UTF_8)
+            .value(new GenericToStringSerializer<>(Long.class))
+            .hashKey(StringRedisSerializer.UTF_8)
+            .hashValue(new GenericToStringSerializer<>(Long.class))
+            .build();
 
         return new ReactiveRedisTemplate<>(connectionFactory, serializationContext);
     }

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS artists (
     updated_by VARCHAR(100) COMMENT '수정자'
 );
 
-CREATE INDEX IF NOT EXISTS idx_artist_name ON artists(name);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_artist_name ON artists(name);
 CREATE INDEX IF NOT EXISTS idx_artist_deleted_at ON artists(deleted_at);
 
 -- 2. Albums 테이블: 앨범 정보를 저장하는 테이블
@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS albums (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '앨범 고유 ID',
     title VARCHAR(255) NOT NULL COMMENT '앨범 제목',
     release_date DATE COMMENT '발매일',
+    artist_name VARCHAR(1000) COMMENT '대표 아티스트명',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
     deleted_at TIMESTAMP NULL COMMENT '삭제일시 (논리 삭제용)',
@@ -26,7 +27,10 @@ CREATE TABLE IF NOT EXISTS albums (
 
 CREATE INDEX IF NOT EXISTS idx_album_release_date ON albums(release_date);
 CREATE INDEX IF NOT EXISTS idx_album_title_date ON albums(title, release_date); -- 중복 체크용 복합 인덱스
+CREATE INDEX IF NOT EXISTS idx_album_title_date_artist ON albums(title, release_date, artist_name); -- 아티스트 포함 복합 인덱스
 CREATE INDEX IF NOT EXISTS idx_album_deleted_at ON albums(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_album_release_date_deleted ON albums(release_date, deleted_at); -- 날짜 범위 검색 최적화
+CREATE INDEX IF NOT EXISTS idx_album_title ON albums(title); -- title 단독 조회용
 
 -- 3. Artist_Albums 테이블: 아티스트와 앨범의 관계를 저장하는 테이블
 CREATE TABLE IF NOT EXISTS artist_albums (
@@ -43,6 +47,7 @@ CREATE TABLE IF NOT EXISTS artist_albums (
 CREATE INDEX IF NOT EXISTS idx_artist_albums_album_artist ON artist_albums(album_id, artist_id);
 CREATE INDEX IF NOT EXISTS idx_artist_albums_artist ON artist_albums(artist_id); -- 아티스트별 앨범 조회용
 CREATE INDEX IF NOT EXISTS idx_artist_albums_deleted_at ON artist_albums(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_artist_albums_deleted_album ON artist_albums(deleted_at, album_id, artist_id); -- deleted_at 필터링 최적화
 
 -- 4. Songs 테이블: 곡 정보를 저장하는 테이블
 CREATE TABLE IF NOT EXISTS songs (
@@ -85,6 +90,7 @@ CREATE TABLE IF NOT EXISTS songs (
 
 CREATE INDEX IF NOT EXISTS idx_song_album ON songs(album_id);
 CREATE INDEX IF NOT EXISTS idx_song_title_album ON songs(title, album_id); -- 중복 체크용 복합 인덱스
+CREATE INDEX IF NOT EXISTS idx_song_title ON songs(title); -- title 단독 조회용 (findAllByTitleIn)
 CREATE INDEX IF NOT EXISTS idx_song_genre ON songs(genre);
 CREATE INDEX IF NOT EXISTS idx_song_like_count ON songs(like_count DESC);
 CREATE INDEX IF NOT EXISTS idx_song_deleted_at ON songs(deleted_at);
