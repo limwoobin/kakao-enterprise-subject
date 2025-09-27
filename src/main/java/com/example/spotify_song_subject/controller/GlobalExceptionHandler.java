@@ -22,17 +22,38 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     /**
-     * MissingRequestValueException 처리 (Required 파라미터 누락)
+     * Bean Validation 예외 처리 (WebFlux 환경)
+     * @Valid 어노테이션으로 검증 실패 시 발생
+     * 400 Bad Request 반환
+     */
+    @ExceptionHandler(WebExchangeBindException.class)
+    public Mono<ResponseEntity<ErrorResponse>> handleValidationException(WebExchangeBindException ex,
+                                                                         ServerWebExchange exchange) {
+        String errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        ErrorResponse errorResponse = ErrorResponse.of(
+                errors,
+                "VALIDATION_ERROR",
+                exchange.getRequest().getPath().value()
+        );
+
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse));
+    }
+
+    /**
+     * MissingRequestValueException 처리 (필수 파라미터 누락)
      * 400 Bad Request 반환
      */
     @ExceptionHandler(MissingRequestValueException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleMissingRequestValueException(MissingRequestValueException ex,
                                                                                   ServerWebExchange exchange) {
-
-        log.warn("Missing request value: {}", ex.getMessage());
-
         ErrorResponse errorResponse = ErrorResponse.of(
-                ex.getReason() != null ? ex.getReason() : "Required parameter is missing",
+                ex.getMessage(),
                 "MISSING_PARAMETER",
                 exchange.getRequest().getPath().value()
         );
@@ -48,9 +69,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public Mono<ResponseEntity<ErrorResponse>> handleIllegalArgumentException(IllegalArgumentException ex,
                                                                               ServerWebExchange exchange) {
-
-        log.warn("Invalid request: {}", ex.getMessage());
-
         ErrorResponse errorResponse = ErrorResponse.of(
                 ex.getMessage(),
                 "BAD_REQUEST",
@@ -74,26 +92,6 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.of(
                 "Internal server error",
                 "INTERNAL_SERVER_ERROR",
-                exchange.getRequest().getPath().value()
-        );
-
-        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorResponse));
-    }
-
-    /**
-     * Throwable 처리 (Error와 Exception을 모두 포함하는 최상위)
-     * OutOfMemoryError, StackOverflowError 등 치명적인 에러 포함
-     */
-    @ExceptionHandler(Throwable.class)
-    public Mono<ResponseEntity<ErrorResponse>> handleThrowable(Throwable throwable,
-                                                               ServerWebExchange exchange) {
-
-        log.error("Critical error occurred: {}", throwable.getMessage(), throwable);
-
-        ErrorResponse errorResponse = ErrorResponse.of(
-                "System error occurred",
-                "SYSTEM_ERROR",
                 exchange.getRequest().getPath().value()
         );
 

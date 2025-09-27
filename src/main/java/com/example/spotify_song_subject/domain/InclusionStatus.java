@@ -1,5 +1,9 @@
 package com.example.spotify_song_subject.domain;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -15,23 +19,26 @@ import java.util.stream.Stream;
  *   <li>옵션 포함 여부</li>
  * </ul>
  */
+@Slf4j
+@Getter
+@AllArgsConstructor
 public enum InclusionStatus {
 
-    /**
-     * 포함됨
-     */
-    INCLUDED,
+    INCLUDED("포함"),
+    NOT_INCLUDED("미포함"),
+    UNKNOWN("알수 없음");
 
-    /**
-     * 포함되지 않음
-     */
-    NOT_INCLUDED,
+    private final String description;
 
-    /**
-     * 알 수 없음 / 미확인
-     */
-    UNKNOWN;
+    public static final Map<String, InclusionStatus> VALUE_CACHE = Stream.of(values())
+        .collect(Collectors.toUnmodifiableMap(Enum::name, Function.identity()));
 
-  public static final Map<String, InclusionStatus> VALUE_CACHE = Stream.of(values())
-    .collect(Collectors.toUnmodifiableMap(Enum::name, Function.identity()));
+    public static InclusionStatus from(String name) {
+        try {
+            return VALUE_CACHE.get(name);
+        } catch (IllegalArgumentException e) {
+            log.error("Failed to parse InclusionStatus from value: {}", name);
+            throw e;
+        }
+    }
 }

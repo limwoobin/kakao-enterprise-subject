@@ -1,29 +1,22 @@
 package com.example.spotify_song_subject.controller.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
-@Getter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ErrorResponse {
-
-    private String message;
-    private String errorCode;
-    private LocalDateTime timestamp;
-    private String path;
+/**
+ * 에러 응답 DTO
+ * API 에러 발생 시 반환되는 응답 객체
+ */
+public record ErrorResponse(String message,
+                            String errorCode,
+                            LocalDateTime timestamp,
+                            String path) {
 
     public static ErrorResponse of(String message, String errorCode, String path) {
-        return ErrorResponse.builder()
-                .message(message)
-                .errorCode(errorCode)
-                .timestamp(LocalDateTime.now())
-                .path(path)
-                .build();
+        return new ErrorResponse(
+                message,
+                errorCode,
+                LocalDateTime.now(),
+                path
+        );
     }
 }
