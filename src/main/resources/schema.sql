@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS albums (
 );
 
 CREATE INDEX IF NOT EXISTS idx_album_release_date ON albums(release_date);
+CREATE INDEX IF NOT EXISTS idx_album_title_date ON albums(title, release_date); -- 중복 체크용 복합 인덱스
 CREATE INDEX IF NOT EXISTS idx_album_deleted_at ON albums(deleted_at);
 
 -- 3. Artist_Albums 테이블: 아티스트와 앨범의 관계를 저장하는 테이블
@@ -40,6 +41,7 @@ CREATE TABLE IF NOT EXISTS artist_albums (
 );
 
 CREATE INDEX IF NOT EXISTS idx_artist_albums_album_artist ON artist_albums(album_id, artist_id);
+CREATE INDEX IF NOT EXISTS idx_artist_albums_artist ON artist_albums(artist_id); -- 아티스트별 앨범 조회용
 CREATE INDEX IF NOT EXISTS idx_artist_albums_deleted_at ON artist_albums(deleted_at);
 
 -- 4. Songs 테이블: 곡 정보를 저장하는 테이블
@@ -82,6 +84,7 @@ CREATE TABLE IF NOT EXISTS songs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_song_album ON songs(album_id);
+CREATE INDEX IF NOT EXISTS idx_song_title_album ON songs(title, album_id); -- 중복 체크용 복합 인덱스
 CREATE INDEX IF NOT EXISTS idx_song_genre ON songs(genre);
 CREATE INDEX IF NOT EXISTS idx_song_like_count ON songs(like_count DESC);
 CREATE INDEX IF NOT EXISTS idx_song_deleted_at ON songs(deleted_at);
@@ -99,6 +102,7 @@ CREATE TABLE IF NOT EXISTS artist_songs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_artist_songs_song_artist ON artist_songs(song_id, artist_id);
+CREATE INDEX IF NOT EXISTS idx_artist_songs_artist ON artist_songs(artist_id); -- 아티스트별 곡 조회용
 CREATE INDEX IF NOT EXISTS idx_artist_songs_deleted_at ON artist_songs(deleted_at);
 
 -- 6. Song_Likes 테이블: 곡에 대한 사용자의 좋아요를 저장하는 테이블
@@ -115,6 +119,7 @@ CREATE TABLE IF NOT EXISTS song_likes (
 
 CREATE INDEX IF NOT EXISTS idx_like_song ON song_likes(song_id);
 CREATE INDEX IF NOT EXISTS idx_like_user ON song_likes(user_id);
+CREATE INDEX IF NOT EXISTS idx_like_song_user ON song_likes(song_id, user_id); -- 중복 체크용 복합 인덱스
 CREATE INDEX IF NOT EXISTS idx_like_created ON song_likes(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_like_deleted_at ON song_likes(deleted_at);
 
