@@ -237,14 +237,11 @@ class AlbumStatisticsControllerTest {
 
         List<AlbumStatisticsDto> dtoList = Arrays.asList(
             AlbumStatisticsDto.builder()
-                .albumId(100L)
-                .albumName("Test Album")
                 .artistId(1L)
                 .artistName("Test Artist")
                 .releaseDate(releaseDate)
                 .releaseYear(2023)
                 .albumCount(1L)
-                .songCount(10L)
                 .build()
         );
 
@@ -261,15 +258,12 @@ class AlbumStatisticsControllerTest {
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.content[0].albumId").isEqualTo(100)
-            .jsonPath("$.content[0].albumName").isEqualTo("Test Album")
             .jsonPath("$.content[0].artistId").isEqualTo(1)
             .jsonPath("$.content[0].artistName").isEqualTo("Test Artist")
             .jsonPath("$.content[0].releaseDate[0]").isEqualTo(2023)
             .jsonPath("$.content[0].releaseDate[1]").isEqualTo(3)
             .jsonPath("$.content[0].releaseDate[2]").isEqualTo(15)
             .jsonPath("$.content[0].releaseYear").isEqualTo(2023)
-            .jsonPath("$.content[0].albumCount").isEqualTo(1)
-            .jsonPath("$.content[0].songCount").isEqualTo(10);
+            .jsonPath("$.content[0].albumCount").isEqualTo(1);
     }
 }

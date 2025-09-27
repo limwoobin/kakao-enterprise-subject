@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -45,8 +43,6 @@ public class SpotifyDataStreamReader {
     private static final int EXPECTED_SIMILAR_SONGS = 5;
     private static final int EXPECTED_SIMILAR_SONG_FIELDS = 10;
 
-    private static final Scheduler CUSTOM_SCHEDULER = Schedulers.newSingle("spotify-parser");
-
     /**
      * Spotify 데이터를 배치 단위로 스트리밍
      */
@@ -59,33 +55,56 @@ public class SpotifyDataStreamReader {
     /**
      * 실제 JSON 파싱을 수행하는 Flux 생성
      * - NDJSON (Newline Delimited JSON) 형식 처리
-     * - 단일 스레드 스케줄러로 순차 처리
-     * - 스레드 재사용으로 효율적인 자원 관리
+     * - 백프레셔 지원을 위해 Flux.generate 사용
+     * - 요청이 있을 때만 다음 데이터 생성
      */
     private Flux<Map<String, Object>> createStreamingFlux(Path jsonFilePath) {
-        return Flux.<Map<String, Object>>create(sink -> {
-            JsonFactory jsonFactory = new JsonFactory();
-
-            try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(jsonFilePath.toFile()), bufferSize);
-                JsonParser jsonParser = jsonFactory.createParser(bis)) {
-                JsonToken token;
-                while ((token = jsonParser.nextToken()) != null) {
-                    if (token == JsonToken.START_OBJECT) {
-                        Map<String, Object> songData = parseSongObject(jsonParser);
-                        if (!songData.isEmpty()) {
-                            sink.next(songData);
+        return Flux.generate(
+            () -> {
+                try {
+                    JsonFactory jsonFactory = new JsonFactory();
+                    BufferedInputStream bis = new BufferedInputStream(
+                        new FileInputStream(jsonFilePath.toFile()), bufferSize);
+                    JsonParser parser = jsonFactory.createParser(bis);
+                    return new ParserState(parser, bis);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to initialize JSON parser", e);
+                }
+            },
+            (state, sink) -> {
+                try {
+                    JsonToken token;
+                    while ((token = state.parser.nextToken()) != null) {
+                        if (token == JsonToken.START_OBJECT) {
+                            Map<String, Object> songData = parseSongObject(state.parser);
+                            if (!songData.isEmpty()) {
+                                sink.next(songData);
+                                return state;
+                            }
                         }
                     }
+                    sink.complete();
+                } catch (Exception e) {
+                    log.error("Error during JSON parsing", e);
+                    sink.error(e);
                 }
-
-                sink.complete();
-            } catch (Exception e) {
-                log.error("Fatal error during JSON streaming", e);
-                sink.error(e);
+                return state;
+            },
+            state -> {
+                try {
+                    if (state.parser != null) state.parser.close();
+                    if (state.bis != null) state.bis.close();
+                } catch (IOException e) {
+                    log.error("Error closing resources", e);
+                }
             }
-        })
-        .subscribeOn(CUSTOM_SCHEDULER);
+        );
     }
+
+    /**
+     * JsonParser와 InputStream을 함께 관리하는 상태 클래스
+     */
+    private record ParserState(JsonParser parser, BufferedInputStream bis) { }
 
     /**
      * 개별 곡 JSON 객체를 Map으로 파싱

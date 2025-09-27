@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-
+import reactor.core.publisher.BufferOverflowStrategy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +33,9 @@ public class DataInitializationRunner {
     @Value("${data.skip-download-if-exists:true}")
     private boolean skipDownloadIfExists;
 
+    @Value("${data.parallel.batches:6}")
+    private int parallelBatches;
+
     /**
      * ApplicationReadyEvent를 사용하여 애플리케이션이 완전히 준비된 후 실행
      * 이렇게 하면 모든 빈이 초기화되고 스키마가 생성된 후에 실행됨
@@ -44,8 +47,7 @@ public class DataInitializationRunner {
         try {
             Path dataPath = Paths.get(dataDirectory);
             if (!Files.exists(dataPath)) {
-                log.error("Data directory does not exist: {}", dataPath.toAbsolutePath());
-                throw new IllegalStateException(String.format("Data directory not found: %s.", dataPath.toAbsolutePath()));
+                Files.createDirectories(dataPath);
             }
 
             Path jsonFilePath = Paths.get(dataDirectory, "900k Definitive Spotify Dataset.json");
@@ -76,8 +78,7 @@ public class DataInitializationRunner {
      */
     private void processSpotifyData() {
         spotifyDataStreamReader.streamSpotifyDataInBatches()
-            .onBackpressureBuffer(10)
-            .flatMap(spotifyDataPersistenceService::processSongBatch)
+            .flatMap(spotifyDataPersistenceService::processSongBatch, parallelBatches, 5)
             .doOnComplete(() -> log.info("✅ Successfully processed Spotify dataset"))
             .doOnError(error -> log.error("❌ Error processing Spotify data", error))
             .blockLast();

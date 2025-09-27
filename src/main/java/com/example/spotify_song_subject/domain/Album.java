@@ -25,10 +25,35 @@ public class Album extends BaseDomain {
     @Column("release_date")
     private LocalDate releaseDate;
 
+    @Column("artist_name")
+    private String artistName;
+
     @Builder
-    public Album(String title, LocalDate releaseDate) {
+    public Album(String title, LocalDate releaseDate, String artistName) {
         this.title = title;
         this.releaseDate = releaseDate;
+        this.artistName = artistName;
+    }
+
+    /**
+     * 정적 팩토리 메소드 - 타이틀과 발매일로 Album 생성
+     */
+    public static Album of(String title, LocalDate releaseDate) {
+        return Album.builder()
+            .title(title)
+            .releaseDate(releaseDate)
+            .build();
+    }
+    
+    /**
+     * 정적 팩토리 메소드 - 타이틀, 발매일, 아티스트명으로 Album 생성
+     */
+    public static Album of(String title, LocalDate releaseDate, String artistName) {
+        return Album.builder()
+            .title(title)
+            .releaseDate(releaseDate)
+            .artistName(artistName)
+            .build();
     }
 
 }

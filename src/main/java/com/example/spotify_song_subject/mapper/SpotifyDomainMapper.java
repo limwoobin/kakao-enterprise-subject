@@ -44,7 +44,7 @@ public class SpotifyDomainMapper {
     }
 
     /**
-     * SpotifySongDto에서 Album 엔티티 추출
+     * SpotifySongDto에서 Album 엔티티 추출 (첫 번째 아티스트를 대표 아티스트로 사용)
      */
     public static Album extractAlbum(SpotifySongDto dto) {
         String albumTitle = dto.getAlbumTitle();
@@ -53,7 +53,21 @@ public class SpotifyDomainMapper {
         }
 
         LocalDate releaseDate = parseReleaseDate(dto.getReleaseDate());
-        return createAlbum(albumTitle, releaseDate);
+        String artistName = extractAllArtistNames(dto);
+        return createAlbum(albumTitle, releaseDate, artistName);
+    }
+    
+    /**
+     * DTO에서 전체 아티스트명 추출 (앨범용)
+     * 앨범에는 모든 아티스트가 포함되어야 함 (예: "A, B, C")
+     */
+    private static String extractAllArtistNames(SpotifySongDto dto) {
+        if (dto.getArtists() == null || dto.getArtists().isEmpty()) {
+            return "Unknown Artist";
+        }
+        
+        // 앨범에는 전체 아티스트 이름을 저장
+        return dto.getArtists().trim();
     }
 
     /**
@@ -130,24 +144,26 @@ public class SpotifyDomainMapper {
                 .name(name)
                 .build();
     }
-
-    private static Album createAlbum(String title, LocalDate releaseDate) {
+    
+    private static Album createAlbum(String title, LocalDate releaseDate, String artistName) {
         return Album.builder()
                 .title(title)
                 .releaseDate(releaseDate)
+                .artistName(artistName)
                 .build();
     }
 
     private static Album createDefaultAlbum() {
         return Album.builder()
                 .title("Unknown Album")
+                .artistName("Unknown Artist")
                 .build();
     }
 
     /**
      * 날짜 파싱
      */
-    private static LocalDate parseReleaseDate(String dateStr) {
+    public static LocalDate parseReleaseDate(String dateStr) {
         if (dateStr == null || dateStr.isEmpty()) {
             return null;
         }

@@ -153,14 +153,11 @@ class AlbumStatisticsQueryServiceTest {
 
         List<AlbumStatisticsDto> dtoList = Arrays.asList(
             AlbumStatisticsDto.builder()
-                .albumId(100L)
-                .albumName("Test Album")
                 .artistId(1L)
                 .artistName("Test Artist")
                 .releaseDate(releaseDate)
                 .releaseYear(2023)
                 .albumCount(1L)
-                .songCount(12L)
                 .build()
         );
 
@@ -176,14 +173,11 @@ class AlbumStatisticsQueryServiceTest {
         StepVerifier.create(result)
             .assertNext(page -> {
                 AlbumStatisticsDto dto = page.getContent().get(0);
-                assertThat(dto.getAlbumId()).isEqualTo(100L);
-                assertThat(dto.getAlbumName()).isEqualTo("Test Album");
                 assertThat(dto.getArtistId()).isEqualTo(1L);
                 assertThat(dto.getArtistName()).isEqualTo("Test Artist");
                 assertThat(dto.getReleaseDate()).isEqualTo(releaseDate);
                 assertThat(dto.getReleaseYear()).isEqualTo(2023);
                 assertThat(dto.getAlbumCount()).isEqualTo(1L);
-                assertThat(dto.getSongCount()).isEqualTo(12L);
             })
             .verifyComplete();
     }

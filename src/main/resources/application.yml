@@ -8,10 +8,12 @@ spring:
     username: sa
     password:
     pool:
-      initial-size: 10
-      max-size: 30
+      initial-size: 20
+      max-size: 50
       max-idle-time: 30m
-      max-acquire-time: 2s
+      max-acquire-time: 5s
+      max-create-connection-time: 5s
+      validation-query: SELECT 1
 
   # Disable SQL initialization (handled by R2dbcConfig)
   sql:
@@ -51,9 +53,11 @@ data:
   initialization:
     enabled: true  # 데이터 초기화 활성화 (테스트 환경에서는 false로 설정)
   batch:
-    size: 1000
+    size: 100
   buffer:
-    size: 65536
+    size: 131072  # 128KB 버퍼
+  parallel:
+    batches: 5
 
 # Google Drive Configuration
 google:
@@ -64,10 +68,13 @@ google:
 # Logging
 logging:
   level:
+    com:
+      example:
+        spotify_song_subject: INFO
     org:
       springframework:
         data:
-          r2dbc: DEBUG
+          r2dbc: INFO
     io:
       r2dbc:
-        h2: DEBUG
+        h2: INFO

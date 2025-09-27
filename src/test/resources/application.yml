@@ -54,6 +54,8 @@ data:
     size: 100
   buffer:
     size: 1024
+  parallel:
+    batches: 6  # 동시에 처리할 배치 수
 
 # Google Drive 설정 (테스트용)
 google:
