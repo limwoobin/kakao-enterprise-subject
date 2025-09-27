@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import java.util.Collection;
 
 @Repository
 public interface SongRepository extends R2dbcRepository<Song, Long> {
@@ -25,7 +25,10 @@ public interface SongRepository extends R2dbcRepository<Song, Long> {
     @Query("UPDATE songs SET like_count = CASE WHEN like_count > 0 THEN like_count - 1 ELSE 0 END WHERE id = :songId")
     Mono<Integer> decrementLikeCount(Long songId);
 
-    @Query("SELECT * FROM songs WHERE id IN (:ids) AND deleted_at IS NULL")
-    Flux<Song> findByIds(@Param("ids") List<Long> ids);
+    /**
+     * title로 여러 Song을 조회 (album_id가 null인 것도 포함)
+     */
+    @Query("SELECT * FROM songs WHERE title IN (:titles) AND deleted_at IS NULL")
+    Flux<Song> findAllByTitleIn(@Param("titles") Collection<String> titles);
 
 }

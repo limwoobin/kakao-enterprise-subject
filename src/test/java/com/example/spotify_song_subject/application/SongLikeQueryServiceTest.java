@@ -7,8 +7,6 @@ import com.example.spotify_song_subject.repository.SongLikeCustomRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -20,7 +18,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 @DisplayName("SongLikeQueryService Unit Tests")
 class SongLikeQueryServiceTest {
 
@@ -273,7 +270,7 @@ class SongLikeQueryServiceTest {
     @Test
     @DisplayName("트렌딩 곡 조회 - 중복 Song ID 처리 (에러 케이스)")
     void getTrendingSongs_DuplicateSongIds() {
-        // Given (실제로는 발생하지 않아야 하지만 방어적 프로그래밍)
+        // Given
         List<SongLikeScore> mockScores = List.of(
             new SongLikeScore(1L, 100L),
             new SongLikeScore(1L, 200L),
@@ -283,7 +280,7 @@ class SongLikeQueryServiceTest {
         when(songLikeRedisRepository.getTop10TrendingSongs())
             .thenReturn(Mono.just(mockScores));
 
-        // When & Then - 중복 키로 인한 에러가 발생하고 빈 리스트 반환
+        // When & Then
         StepVerifier.create(songLikeQueryService.getTrendingSongs())
             .assertNext(result -> assertThat(result).isEmpty())
             .verifyComplete();
