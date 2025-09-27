@@ -4,6 +4,7 @@ import com.example.spotify_song_subject.application.SpotifyDataPersistenceServic
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,11 @@ import java.nio.file.Paths;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+    name = "data.initialization.enabled",
+    havingValue = "true",
+    matchIfMissing = true
+)
 public class DataInitializationRunner {
 
     private final GoogleDriveDownloader googleDriveDownloader;

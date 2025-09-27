@@ -1,26 +1,70 @@
+# 테스트 환경 통합 설정
 spring:
+  application:
+    name: spotify-song-subject-test
+
   main:
     lazy-initialization: true
+
+  # R2DBC 테스트 데이터베이스 설정 (H2 in-memory)
   r2dbc:
     url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
     username: sa
     password:
+    pool:
+      initial-size: 5
+      max-size: 10
+      max-idle-time: 30m
+      max-acquire-time: 2s
 
+  # Redis 테스트 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+      reactive:
+        host: localhost
+        port: 6379
+        password:
+
+  # SQL 초기화 설정
+  sql:
+    init:
+      mode: always
+
+  # H2 콘솔 (테스트 디버깅용)
+  h2:
+    console:
+      enabled: false  # 테스트에서는 비활성화
+
+# 데이터 초기화 설정
 data:
   directory: ${java.io.tmpdir}/test-data
   skip-download-if-exists: true
+  initialization:
+    enabled: false  # 테스트 환경에서는 데이터 초기화 비활성화
   batch:
     size: 100
   buffer:
     size: 1024
 
+# Google Drive 설정 (테스트용)
 google:
   drive:
     file:
-      id: test-file-id
+      id: skip  # 테스트 환경에서는 다운로드 스킵
 
+# 로깅 설정
 logging:
   level:
     com.example.spotify_song_subject: DEBUG
     org.springframework.r2dbc: DEBUG
+    org.springframework.data.r2dbc: DEBUG
     io.r2dbc.h2: DEBUG

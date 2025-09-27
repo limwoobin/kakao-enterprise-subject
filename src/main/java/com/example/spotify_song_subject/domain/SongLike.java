@@ -1,5 +1,6 @@
 package com.example.spotify_song_subject.domain;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -20,4 +21,17 @@ public class SongLike extends BaseDomain {
 
     @Column("user_id")
     private Long userId;
+
+    @Builder
+    public SongLike(Long songId, Long userId) {
+        this.songId = songId;
+        this.userId = userId;
+    }
+
+    public static SongLike create(Long songId, Long userId) {
+        return SongLike.builder()
+                .songId(songId)
+                .userId(userId)
+                .build();
+    }
 }
