@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * 앨범 통계 DTO
+ * 앨범별 통계 정보를 담는 DTO
+ */
 @Getter
 @Builder
 @NoArgsConstructor
