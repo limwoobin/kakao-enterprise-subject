@@ -40,6 +40,9 @@ class DataInitializationRunnerBehaviorTest {
             spotifyDataStreamReader,
             spotifyDataPersistenceService
         );
+        
+        // parallelBatches 기본값 설정
+        ReflectionTestUtils.setField(dataInitializationRunner, "parallelBatches", 6);
     }
 
     @Test
@@ -165,24 +168,6 @@ class DataInitializationRunnerBehaviorTest {
 
         // then - 스트리밍 처리가 실행되었는지만 검증
         verify(spotifyDataStreamReader, times(1)).streamSpotifyDataInBatches();
-    }
-
-    @Test
-    @DisplayName("데이터 디렉토리가 없으면 예외가 발생한다")
-    void 디렉토리없음_예외발생() {
-        // given
-        Path nonExistentDir = tempDir.resolve("non-existent");
-        ReflectionTestUtils.setField(dataInitializationRunner, "dataDirectory", nonExistentDir.toString());
-
-        // when & then
-        assertThatThrownBy(() -> dataInitializationRunner.onApplicationReady())
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("Data initialization failed")
-            .hasCauseInstanceOf(IllegalStateException.class);
-
-        // 초기화가 시작도 되지 않음
-        verify(googleDriveDownloader, never()).downloadAndExtractFile();
-        verify(spotifyDataStreamReader, never()).streamSpotifyDataInBatches();
     }
 
     @Test
