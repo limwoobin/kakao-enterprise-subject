@@ -8,9 +8,10 @@ spring:
     username: sa
     password:
     pool:
-      initial-size: 5
-      max-size: 10
+      initial-size: 10
+      max-size: 30
       max-idle-time: 30m
+      max-acquire-time: 2s
 
   # Disable SQL initialization (handled by R2dbcConfig)
   sql:
@@ -47,6 +48,8 @@ spring:
 data:
   directory: data
   skip-download-if-exists: true
+  initialization:
+    enabled: true  # 데이터 초기화 활성화 (테스트 환경에서는 false로 설정)
   batch:
     size: 1000
   buffer:
