@@ -1,12 +1,12 @@
 package com.example.spotify_song_subject.controller;
 
 import com.example.spotify_song_subject.controller.response.AlbumStatisticsResponse;
+import com.example.spotify_song_subject.controller.util.PageableUtils;
 import com.example.spotify_song_subject.application.AlbumStatisticsQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -28,11 +28,14 @@ public class AlbumStatisticsController {
      */
     @GetMapping
     public Mono<ResponseEntity<Page<AlbumStatisticsResponse>>> getAlbumStatistics(@RequestParam(required = true) Integer year,
-                                                                                  @PageableDefault(size = 10) Pageable pageable) {
-        Mono<Page<AlbumStatisticsResponse>> response = albumStatisticsQueryService.getAlbumStatisticsByYear(year, pageable)
-            .map(dtoPage -> dtoPage.map(AlbumStatisticsResponse::from));
-
-        return response.map(ResponseEntity::ok)
+                                                                                  @RequestParam(required = false) Integer page,
+                                                                                  @RequestParam(required = false) Integer size) {
+        
+        Pageable pageable = PageableUtils.createPageable(page, size);
+        
+        return albumStatisticsQueryService.getAlbumStatisticsByYear(year, pageable)
+            .map(dtoPage -> dtoPage.map(AlbumStatisticsResponse::from))
+            .map(ResponseEntity::ok)
             .switchIfEmpty(Mono.just(ResponseEntity.noContent().build()));
     }
 }

@@ -8,16 +8,11 @@ import java.time.LocalDate;
  * 앨범 통계 응답 DTO
  * 앨범별 통계 정보를 담는 응답 객체
  */
-public record AlbumStatisticsResponse(
-        Long albumId,
-        String albumName,
-        Long artistId,
-        String artistName,
-        LocalDate releaseDate,
-        Integer releaseYear,
-        Long albumCount,
-        Long songCount
-) {
+public record AlbumStatisticsResponse(Long artistId,
+                                      String artistName,
+                                      LocalDate releaseDate,
+                                      Integer releaseYear,
+                                      Long albumCount) {
 
     /**
      * AlbumStatisticsDto로부터 Response 객체 생성
@@ -26,14 +21,11 @@ public record AlbumStatisticsResponse(
      */
     public static AlbumStatisticsResponse from(AlbumStatisticsDto dto) {
         return new AlbumStatisticsResponse(
-                dto.getAlbumId(),
-                dto.getAlbumName(),
                 dto.getArtistId(),
                 dto.getArtistName(),
                 dto.getReleaseDate(),
                 dto.getReleaseYear(),
-                dto.getAlbumCount(),
-                dto.getSongCount()
+                dto.getAlbumCount()
         );
     }
 }

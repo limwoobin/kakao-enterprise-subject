@@ -17,13 +17,10 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class AlbumStatisticsDto {
 
-    private Long albumId;
-    private String albumName;
     private Long artistId;
     private String artistName;
     private LocalDate releaseDate;
     private Integer releaseYear;
     private Long albumCount;
-    private Long songCount;
 
 }
